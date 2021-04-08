@@ -152,27 +152,33 @@ data:
   scheduler-config.yaml: |
     apiVersion: kubescheduler.config.k8s.io/v1beta1
     kind: KubeSchedulerConfiguration
-    schedulerName: sample-scheduler
     leaderElection:
       leaderElect: true
-      lockObjectName: sample-scheduler
+      leaseDuration: 15s
+      lockObjectName: kube-scheduler
       lockObjectNamespace: kube-system
-    plugins:
-      preFilter:
-        enabled:
+      renewDeadline: 10s
+      resourceLock: endpoints
+      retryPeriod: 2s
+    profiles:
+    - schedulerName: default-scheduler
+    - schedulerName: bin-packing-scheduler
+      plugins:
+        preFilter:
+          enabled:
+          - name: "sample-plugin"
+        filter:
+          enabled:
+          - name: "sample-plugin"
+        preBind:
+          enabled:
+          - name: "sample-plugin"
+      pluginConfig:
         - name: "sample-plugin"
-      filter:
-        enabled:
-        - name: "sample-plugin"
-      preBind:
-        enabled:
-        - name: "sample-plugin"
-    pluginConfig:
-    - name: "sample-plugin"
-      args:
-        favorite_color: "#326CE5"
-        favorite_number: 7
-        thanks_to: "thockin"
+          args:
+            favorite_color: "#326CE5"
+            favorite_number: 7
+            thanks_to: "thockin"
 ---
 apiVersion: apps/v1
 kind: Deployment
