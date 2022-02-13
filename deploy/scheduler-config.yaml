@@ -3,13 +3,12 @@ kind: KubeSchedulerConfiguration
 leaderElection:
   leaderElect: true
   leaseDuration: 15s
-  lockObjectName: kube-scheduler
+  lockObjectName: sample-scheduler
   lockObjectNamespace: kube-system
   renewDeadline: 10s
   resourceLock: endpoints
   retryPeriod: 2s
 profiles:
-- schedulerName: default-scheduler
 - schedulerName: bin-packing-scheduler
   plugins:
     preFilter:

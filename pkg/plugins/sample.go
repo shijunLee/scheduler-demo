@@ -20,6 +20,8 @@ type Args struct {
 	ThanksTo       string `json:"thanks_to,omitempty"`
 }
 
+var _ framework.PreFilterPlugin = &Sample{}
+
 type Sample struct {
 	args   *Args
 	handle framework.Handle
@@ -27,6 +29,23 @@ type Sample struct {
 
 func (s *Sample) Name() string {
 	return Name
+}
+func (s *Sample) PreFilterExtensions() framework.PreFilterExtensions {
+	return s
+}
+
+func (s *Sample) AddPod(ctx context.Context, state *framework.CycleState, podToSchedule *v1.Pod,
+	podInfoToAdd *framework.PodInfo, nodeInfo *framework.NodeInfo) *framework.Status {
+	klog.V(3).Infof("addPod pod: %v", podToSchedule.Name)
+	return framework.NewStatus(framework.Success, "")
+}
+
+// RemovePod is called by the framework while trying to evaluate the impact
+// of removing podToRemove from the node while scheduling podToSchedule.
+func (s *Sample) RemovePod(ctx context.Context, state *framework.CycleState, podToSchedule *v1.Pod,
+	podInfoToRemove *framework.PodInfo, nodeInfo *framework.NodeInfo) *framework.Status {
+	klog.V(3).Infof("removePod pod: %v", podToSchedule.Name)
+	return framework.NewStatus(framework.Success, "")
 }
 
 func (s *Sample) PreFilter(ctx context.Context, state *framework.CycleState, p *v1.Pod) *framework.Status {
@@ -40,6 +59,7 @@ func (s *Sample) Filter(ctx context.Context, state *framework.CycleState, pod *v
 }
 
 func (s *Sample) PreBind(ctx context.Context, state *framework.CycleState, p *v1.Pod, nodeName string) *framework.Status {
+	klog.V(3).Infof("start pre bind pod %s/%s: %+v", p.Name, p.Namespace, nodeName)
 	if nodeInfo, err := s.handle.SnapshotSharedLister().NodeInfos().Get(nodeName); err != nil {
 		return framework.NewStatus(framework.Error, fmt.Sprintf("prebind get node info error: %+v", nodeName))
 	} else {
@@ -54,6 +74,7 @@ func New(obj runtime.Object, f framework.Handle) (framework.Plugin, error) {
 
 	args := &Args{}
 	if err := frameworkruntime.DecodeInto(obj, args); err != nil {
+		klog.Error("merge config error", err)
 		return nil, err
 	}
 
